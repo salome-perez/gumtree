@@ -27,12 +27,23 @@ import com.github.gumtreediff.client.Register;
 import com.github.gumtreediff.io.ActionsIoUtils;
 import com.github.gumtreediff.matchers.MappingStore;
 import com.github.gumtreediff.tree.TreeContext;
-
+import com.github.gumtreediff.tree.Tree;
+import com.github.gumtreediff.unparser.Unparser;
+import com.github.gumtreediff.actions.model.Addition;
+import com.github.gumtreediff.actions.model.Action;
+import com.github.gumtreediff.actions.model.Delete;
+import com.github.gumtreediff.actions.model.Insert;
+import com.github.gumtreediff.actions.model.Move;
+import com.github.gumtreediff.actions.model.Update;
+import com.github.gumtreediff.actions.model.TreeAddition;
+import com.github.gumtreediff.actions.model.TreeDelete;
+import com.github.gumtreediff.actions.model.TreeInsert;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 @Register(name = "textdiff", description = "Dump actions in a textual format.",
         options = TextDiff.TextDiffOptions.class)
@@ -96,6 +107,23 @@ public class TextDiff extends AbstractDiffClient<TextDiff.TextDiffOptions> {
         return new TextDiffOptions();
     }
 
+    protected String getMethod(Action a) {
+        List<Tree> parents = a.getNode().getParents();
+        String methodName = "";
+        for (Tree parent : parents) {
+            String currentNodeType = parent.getType().name;
+            //String currentNodeLabel = parent.getLabel();
+            if (currentNodeType.equals("MethodDeclaration")) {
+                methodName = (String) parent.getMetadata("id");
+                //String meta2 = (String) a.getNode().getRoot().getChild("0").getMetadata("id");
+                //String meta2 = (String) parent.getMetadata(methodName);
+                System.out.printf("%n%n%n__PARENT TYPE__: %s [Method]: %s", currentNodeType,methodName);
+                //System.out.printf("%n\t [Meta2]: %s", meta2);           
+            }
+        }
+        return methodName;
+    }
+
     @Override
     public void run() throws Exception {
         Diff diff = getDiff();
@@ -105,6 +133,61 @@ public class TextDiff extends AbstractDiffClient<TextDiff.TextDiffOptions> {
             serializer.writeTo(System.out);
         else
             serializer.writeTo(opts.output);
+        //System.out.println("Diff src");
+        //System.out.println(diff.src);
+        //System.out.println("Diff editScript");
+        //System.out.println(diff.editScript);
+        //System.out.println("Diff mappings");
+        //System.out.println(diff.mappings);
+        //PrettyPrint pp = new PrettyPrint();
+        //pp.runUnparser();
+        // --- Option 1 ---
+        //Tree originalTree = diff.src.getRoot();
+        //System.out.printf("--- Tree from Textdiff ---%n%s%n",originalTree.toString());
+        //System.out.println("Children:");
+        //List<Tree> children = originalTree.getChildren();
+        //for (Tree child: children) {
+        //    System.out.println(child.toString());
+        //}
+        //StringBuilder sb = new StringBuilder();
+        //Unparser.prettyPrintNode(originalTree, sb);
+        //String result = sb.toString();
+        //System.out.printf("%n%n--- UNPARSED ---:%n%s",result);
+        // --- Option 2 ---
+        //System.out.printf("%n%n------------ LOOP OVER ACTIONS ... ");
+        for (Action a : diff.editScript.asList()) {
+            String actionMethod = getMethod(a);
+            //Tree nodeTree = a.getNode().getParent(); // a.getNode().getRoot();
+            Tree src = a.getNode();
+            Tree dst = null;
+            StringBuilder sb = new StringBuilder();
+            if (actionMethod != "") {
+                if (a instanceof Move) { 
+                    dst = diff.mappings.getDstForSrc(src).getParent();
+                } else if (a instanceof Update) {
+                    dst = diff.mappings.getDstForSrc(src);
+                } else if (a instanceof Insert) {
+                    dst = a.getNode().getParent();
+                    //if (dst.isRoot()) insertRoot((Insert) a, nodeTree); else 
+                    //insertAction((Insert)a,nodeTree, dst.getParent().getChildPOsition(dst));
+                } else if (a instanceof Delete) {
+                    dst = null;
+                    //deleteAction((Delete) a, nodeTree);
+                } else if (a instanceof TreeInsert) {
+                    dst = a.getNode().getParent();
+                    //insertTreeAction((TreeInsert) a, nodeTree, dst.getParent(), dst.getParent().getChildPosition(dst))
+                } else if (a instanceof TreeDelete) {
+                    dst = null;
+                    //deleteTreeAction((TreeDelete) a, nodeTree);
+                }
+            }
+            if (dst != null) {
+                System.out.printf("%n\t[Action]: %s", a.getName());
+                Unparser.prettyPrintNode(dst,sb);
+                String result = sb.toString();
+                System.out.printf("%n\t[Action Unparsed]:%n%s",result);
+            }
+        }
     }
 
     enum OutputFormat {

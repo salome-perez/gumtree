@@ -31,54 +31,46 @@ import java.util.*;
 
 public class MappingComparators {
     public static class FullMappingComparator implements Comparator<Mapping> {
-
-        private final SiblingsSimilarityMappingComparator siblingsComparator;
-        private final ParentsSimilarityMappingComparator parentsComparator;
-        private final PositionInParentsSimilarityMappingComparator parentsPositionComparator;
-        private final TextualPositionDistanceMappingComparator textualPositionComparator;
-        private final AbsolutePositionDistanceMappingComparator positionComparator;
+        private SiblingsSimilarityMappingComparator siblingsComparator;
+        private ParentsSimilarityMappingComparator parentsComparator;
+        private PositionInParentsSimilarityMappingComparator parentsPositionComparator;
+        private AbsolutePositionDistanceMappingComparator positionComparator;
 
         public FullMappingComparator(MappingStore ms) {
             siblingsComparator = new SiblingsSimilarityMappingComparator(ms);
             parentsComparator = new ParentsSimilarityMappingComparator();
             parentsPositionComparator = new PositionInParentsSimilarityMappingComparator();
-            textualPositionComparator = new TextualPositionDistanceMappingComparator();
             positionComparator = new AbsolutePositionDistanceMappingComparator();
         }
 
         @Override
         public int compare(Mapping m1, Mapping m2) {
-            // compare with matched siblings similarity
+            //System.out.println("compare with siblings.");
             int result = siblingsComparator.compare(m1, m2);
             if (result != 0)
                 return result;
 
-            // compare with ancestors similarity
+            //System.out.println("compare with parents.");
             result = parentsComparator.compare(m1, m2);
             if (result != 0)
                 return result;
 
-            // compare with relative position similarity
+            //System.out.println("compare with relative pos.");
             result = parentsPositionComparator.compare(m1, m2);
             if (result != 0)
                 return result;
 
-            // compare with relative pos
-            result = textualPositionComparator.compare(m1, m2);
-            if (result != 0)
-                return result;
-
-            // compare with absolute pos
+            //System.out.println("compare with absolute pos.");
             return positionComparator.compare(m1, m2);
         }
     }
 
     public static class SiblingsSimilarityMappingComparator implements Comparator<Mapping> {
-        private final MappingStore ms;
+        private MappingStore ms;
 
-        private final Map<Tree, Set<Tree>> srcDescendants = new HashMap<>();
-        private final Map<Tree, Set<Tree>> dstDescendants = new HashMap<>();
-        private final Map<Mapping, Double> cachedSimilarities = new HashMap<>();
+        private Map<Tree, Set<Tree>> srcDescendants = new HashMap<>();
+        private Map<Tree, Set<Tree>> dstDescendants = new HashMap<>();
+        private Map<Mapping, Double> cachedSimilarities = new HashMap<>();
 
         public SiblingsSimilarityMappingComparator(MappingStore ms) {
             this.ms = ms;
@@ -91,13 +83,13 @@ public class MappingComparators {
                 return 0;
 
             if (!cachedSimilarities.containsKey(m1))
-            cachedSimilarities.put(m1, SimilarityMetrics.diceCoefficient(commonDescendantsNb(m1.first.getParent(),
+                cachedSimilarities.put(m1, SimilarityMetrics.diceCoefficient(commonDescendantsNb(m1.first.getParent(),
                         m1.second.getParent()),
                         srcDescendants.get(m1.first.getParent()).size(),
                         dstDescendants.get(m1.second.getParent()).size()));
 
             if (!cachedSimilarities.containsKey(m2))
-            cachedSimilarities.put(m2, SimilarityMetrics.diceCoefficient(commonDescendantsNb(m2.first.getParent(),
+                cachedSimilarities.put(m2, SimilarityMetrics.diceCoefficient(commonDescendantsNb(m2.first.getParent(),
                         m2.second.getParent()),
                         srcDescendants.get(m2.first.getParent()).size(),
                         dstDescendants.get(m2.second.getParent()).size()));
@@ -106,8 +98,10 @@ public class MappingComparators {
         }
 
         private int commonDescendantsNb(Tree src, Tree dst) {
-            srcDescendants.putIfAbsent(src, new HashSet<>(src.getDescendants()));
-            dstDescendants.putIfAbsent(dst, new HashSet<>(dst.getDescendants()));
+            if (!srcDescendants.containsKey(src))
+                srcDescendants.put(src, new HashSet<>(src.getDescendants()));
+            if (!dstDescendants.containsKey(dst))
+                dstDescendants.put(dst, new HashSet<>(dst.getDescendants()));
 
             int common = 0;
 
@@ -122,9 +116,7 @@ public class MappingComparators {
     }
 
     public static class ParentsSimilarityMappingComparator implements Comparator<Mapping> {
-        private final Map<Tree, List<Tree>> srcAncestors = new HashMap<>();
-        private final Map<Tree, List<Tree>> dstAncestors = new HashMap<>();
-        private final Map<Mapping, Double> cachedSimilarities = new HashMap<>();
+        private Map<Mapping, Double> cachedSimilarities = new HashMap<>();
 
         @Override
         public int compare(Mapping m1, Mapping m2) {
@@ -132,34 +124,23 @@ public class MappingComparators {
                     && m1.second.getParent() == m2.second.getParent())
                 return 0;
 
-            srcAncestors.putIfAbsent(m1.first, m1.first.getParents());
-            dstAncestors.putIfAbsent(m1.second, m1.second.getParents());
-            srcAncestors.putIfAbsent(m2.first, m2.first.getParents());
-            dstAncestors.putIfAbsent(m2.second, m2.second.getParents());
-
             if (!cachedSimilarities.containsKey(m1)) {
-                double m1Sim = SimilarityMetrics.diceCoefficient(
-                        commonParentsNb(m1.first, m1.second),
-                        srcAncestors.get(m1.first).size(),
-                        dstAncestors.get(m1.second).size());
+                int commonParentsNbInM1 = SequenceAlgorithms.longestCommonSubsequenceWithTypeAndLabel(
+                        m1.first.getParents(), m1.second.getParents()).size();
+                double m1Sim = SimilarityMetrics.diceCoefficient(commonParentsNbInM1, m1.first.getParents().size(),
+                        m1.second.getParents().size());
                 cachedSimilarities.put(m1, m1Sim);
             }
 
             if (!cachedSimilarities.containsKey(m2)) {
-                double m2Sim = SimilarityMetrics.diceCoefficient(
-                        commonParentsNb(m2.first, m2.second),
-                        srcAncestors.get(m2.first).size(),
-                        dstAncestors.get(m2.second).size());
+                int commonParentsNbInM2 = SequenceAlgorithms.longestCommonSubsequenceWithTypeAndLabel(
+                        m2.first.getParents(), m2.second.getParents()).size();
+                double m2Sim = SimilarityMetrics.diceCoefficient(commonParentsNbInM2, m2.first.getParents().size(),
+                        m2.second.getParents().size());
                 cachedSimilarities.put(m2, m2Sim);
             }
 
             return Double.compare(cachedSimilarities.get(m2), cachedSimilarities.get(m1));
-        }
-
-        private int commonParentsNb(Tree src, Tree dst) {
-            return SequenceAlgorithms.longestCommonSubsequenceWithType(
-                    srcAncestors.get(src),
-                    dstAncestors.get(dst)).size();
         }
     }
 
@@ -187,7 +168,8 @@ public class MappingComparators {
             Tree current = src;
             while (current != null && current.getParent() != null) {
                 Tree parent = current.getParent();
-                double pos = parent.getChildPosition(current);
+                double pos = (double) parent.getChildPosition(current)
+                        / (double) parent.getChildren().size();
                 posVector.add(pos);
                 current = parent;
             }

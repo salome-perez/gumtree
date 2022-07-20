@@ -19,17 +19,15 @@
 
 package com.github.gumtreediff.gen.treesitter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.github.gumtreediff.gen.SyntaxException;
-import com.github.gumtreediff.gen.TreeGenerator;
-import com.github.gumtreediff.matchers.Matcher;
-import com.github.gumtreediff.matchers.optimal.TopDownMatcher;
 import com.github.gumtreediff.tree.Tree;
 import com.github.gumtreediff.tree.TreeContext;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class TreeSitterTreeGeneratorsTest {
     @Test

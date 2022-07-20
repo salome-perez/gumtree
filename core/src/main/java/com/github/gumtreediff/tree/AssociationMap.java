@@ -31,6 +31,10 @@ public class AssociationMap {
     ArrayList<String> keys = new ArrayList<>();
 
     public Object get(String key) {
+        //System.out.printf("%n\tALL KEYS: ");
+        for (String k: keys) {
+            System.out.printf("%s\t",k);
+        }
         int idx = keys.indexOf(key);
         if (idx == -1)
             return null;

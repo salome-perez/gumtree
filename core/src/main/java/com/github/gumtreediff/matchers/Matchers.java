@@ -20,7 +20,8 @@
 
 package com.github.gumtreediff.matchers;
 
-import com.github.gumtreediff.utils.Registry;
+import com.github.gumtreediff.gen.Registry;
+import com.github.gumtreediff.matchers.heuristic.LcsMatcher;
 
 /**
  * Registry of matchers, using a singleton pattern.

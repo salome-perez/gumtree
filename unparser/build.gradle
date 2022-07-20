@@ -1,0 +1,8 @@
+description = 'GumTree tree generator for Java code (Eclipse JDT based).'
+
+dependencies {
+	implementation project(':gen.jdt')
+	implementation project(':core')
+	implementation 'com.google.code.gson:gson:2.8.6'
+	implementation 'com.github.gumtreediff:core'
+}

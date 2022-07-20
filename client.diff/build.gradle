@@ -2,6 +2,7 @@ description = 'GumTree diff client.'
 
 dependencies {
 	implementation project(':client')
+	implementation project(':unparser')
 	implementation 'com.sparkjava:spark-core:2.9.1'
 	implementation 'org.slf4j:slf4j-simple:1.7.21'
 	implementation 'it.unimi.dsi:fastutil:8.3.1'

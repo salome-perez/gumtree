@@ -20,7 +20,7 @@
 
 package com.github.gumtreediff.matchers;
 
-import com.github.gumtreediff.utils.Registry;
+import com.github.gumtreediff.gen.Registry;
 import org.atteo.classindex.IndexAnnotated;
 
 import java.lang.annotation.ElementType;
@@ -35,4 +35,6 @@ public @interface Register {
     String id();
 
     int priority() default Registry.Priority.MEDIUM;
+
+    boolean defaultMatcher() default false;
 }

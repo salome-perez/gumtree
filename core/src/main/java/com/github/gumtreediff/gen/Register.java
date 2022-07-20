@@ -20,7 +20,6 @@
 
 package com.github.gumtreediff.gen;
 
-import com.github.gumtreediff.utils.Registry;
 import org.atteo.classindex.IndexAnnotated;
 
 import java.lang.annotation.ElementType;

@@ -22,7 +22,6 @@ package com.github.gumtreediff.gen;
 
 import com.github.gumtreediff.io.TreeIoUtils;
 import com.github.gumtreediff.tree.TreeContext;
-import com.github.gumtreediff.utils.Registry;
 
 import java.io.IOException;
 import java.io.Reader;

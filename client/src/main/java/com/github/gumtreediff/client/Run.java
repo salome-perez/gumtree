@@ -21,12 +21,12 @@
 package com.github.gumtreediff.client;
 
 import com.github.gumtreediff.gen.TreeGenerators;
-import com.github.gumtreediff.utils.Registry;
+import com.github.gumtreediff.gen.Registry;
 import com.github.gumtreediff.gen.TreeGenerator;
 import com.github.gumtreediff.matchers.Matcher;
 import com.github.gumtreediff.matchers.Matchers;
 import org.atteo.classindex.ClassIndex;
-
+import com.github.gumtreediff.unparser.PrettyPrint;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -125,6 +125,8 @@ public class Run {
                 clientArgs.add("--help");
             String[] finalArgs = new String[clientArgs.size()];
             clientArgs.toArray(finalArgs);
+            //System.out.println("Calling PrettyPrint");
+            //PrettyPrint pp = new PrettyPrint();
             startClient(origArgs[0], client, finalArgs);
         }
     }
