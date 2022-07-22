@@ -117,7 +117,7 @@ public class TextDiff extends AbstractDiffClient<TextDiff.TextDiffOptions> {
                 methodName = (String) parent.getMetadata("id");
                 //String meta2 = (String) a.getNode().getRoot().getChild("0").getMetadata("id");
                 //String meta2 = (String) parent.getMetadata(methodName);
-                System.out.printf("%n%n%n__PARENT TYPE__: %s [Method]: %s", currentNodeType,methodName);
+                System.out.printf("%n%n%n______ METHOD _____: %s [NodeType]: %s", methodName,currentNodeType);
                 //System.out.printf("%n\t [Meta2]: %s", meta2);           
             }
         }

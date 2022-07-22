@@ -34,12 +34,17 @@ public final class Unparser {
             typeInteger = String.join("_",typeList);
         }
         typeInteger = typeInteger.toUpperCase();
-        System.out.printf("%n\t\tNodeType: %s",typeInteger);
+        //System.out.printf("\n\n*** NodeType: %s",typeInteger);
         NodeTypeEnum stype = NodeTypeEnum.valueOf(typeInteger);
-        //System.out.printf("NodeTypeEnum: %s", NodeTypeEnum.valueOf(stype));
+        System.out.printf("\n\n*** NodeType: %s     *** NodeLabel:%s", stype, node.getLabel());
         //System.out.printf("Ordinal: %d", NodeTypeEnum.stype.ordinal());
-        //NodeTypeEnum whichType = NodeTypeEnum.values()[NodeTypeEnum.valueOf(typeInteger).ordinal()];
-        switch (stype) {
+        //NodeTypeEnum whichType = NodeTypeEnum.values()[NodeTypeEnum.valueOf(typeInteger).ordinal()];       
+        List<Tree> childrenL = node.getChildren();
+        System.out.printf("\n    C H I L D R E N: %d\n",childrenL.size());
+        for (Tree child : childrenL) {
+            System.out.printf("\n%s\n%s\n", child.getType().name, child.toTreeString());
+        }
+	switch (stype) {
             case ANONYMOUS_CLASS_DECLARATION:
                 unparseAnonymousClassDeclaration(node, sb);
                 break;
@@ -324,12 +329,12 @@ public final class Unparser {
                  * a "dummy type," this will never happen; it would crash on the
                  * array access above before this ever happened. */
                 sb.append("UNKNOWN_TYPE_ENCOUNTERED");
+                System.out.printf("Type: %s",stype);
         }
     } /* end prettyPrintNode */
 
     private static void unparseAnonymousClassDeclaration(Tree node,
                                                          StringBuilder sb) {
-
     }
 
     private static void unparseArrayAccess(Tree node, StringBuilder sb) {
@@ -345,19 +350,16 @@ public final class Unparser {
     }
 
     private static void unparseArrayType(Tree node, StringBuilder sb) {
-//        List<Tree> children = node.getChildren();
-//
-//        for (Tree child : children) {
-//            prettyPrintNode(child, sb);
-//        }
-        /* TODO: check if it is ever necessary to print each child */
+        List<Tree> children = node.getChildren();
         sb.append(node.getLabel());
+        for (Tree child : children) {
+            prettyPrintNode(child, sb);
+        }
     }
 
     private static void unparseAssertStatement(Tree node, StringBuilder sb) {
 
     }
-
     private static void unparseAssignment(Tree node, StringBuilder sb) {
         List<Tree> children = node.getChildren();
         boolean equalsPrinted = false;
@@ -371,7 +373,6 @@ public final class Unparser {
                 equalsPrinted = true;
             }
         }
-
     }
 
     private static void unparseBlock(Tree node, StringBuilder sb) {
@@ -489,14 +490,16 @@ public final class Unparser {
         // TODO: test what happens if for statement is only one line
         // could possibly test last child to see if it's a block
         List<Tree> children = node.getChildren();
-
         sb.append("if (");
-        for (Tree child : children) {
-            if (child.getType().name.equals(EntityType.BLOCK.name())) {
-                /* the conditions have ended */
-                sb.append(") ");
-            }
-            prettyPrintNode(child, sb);
+        prettyPrintNode(children.get(0), sb);
+	sb.append(") {");
+	prettyPrintNode(children.get(1), sb);
+        sb.append("\n\t}");
+
+        if (children.size() > 2) {
+            sb.append("else {");
+            prettyPrintNode(children.get(2), sb);
+	    sb.append("\n\t}");
         }
     }
 
@@ -537,17 +540,14 @@ public final class Unparser {
     private static void unparseMethodDeclaration(Tree node, StringBuilder sb) {
         List<Tree> children = node.getChildren();
         boolean methodHasBeenNamed = false;
-
         for (Tree child : children) {
             /* The last child of a method decl should be a block, before which
              * the parameter list should end with a closing ")" */
             if (child.getType().name.equals(EntityType.BLOCK.name())) {
                 sb.append(") ");
             }
-
             prettyPrintNode(child, sb);
             sb.append(" ");
-
             /* The first simple name child of a method decl should be the name
              * of the method. This should be followed by the parameter list
              * surrounded in parentheses */
@@ -562,7 +562,6 @@ public final class Unparser {
 
     private static void unparseMethodInvocation(Tree node, StringBuilder sb) {
         List<Tree> children = node.getChildren();
-
         /* Print the receiver (always the 1st child) */
         prettyPrintNode(children.get(0), sb);
         /* After the receiver of the message send, add a "." */
@@ -576,7 +575,6 @@ public final class Unparser {
     private static void printArgList(int startIdx, List<Tree> children,
                                      StringBuilder sb) {
         sb.append("(");
-
         List<Tree> arguments = children.subList(startIdx, children.size());
         for (Tree child : arguments) {
             prettyPrintNode(child, sb);
@@ -625,16 +623,20 @@ public final class Unparser {
     }
 
     private static void unparsePostfixExpression(Tree node, StringBuilder sb) {
-
+        List<Tree> children = node.getChildren();
+        sb.append(node.getLabel());
+	for (Tree child: children) {
+	    prettyPrintNode(child,sb);
+	}
     }
 
     private static void unparsePrefixExpression(Tree node, StringBuilder sb) {
         List<Tree> children = node.getChildren();
 
-        sb.append(node.getLabel());
         for (Tree child : children) {
             prettyPrintNode(child, sb);
         }
+	sb.append(node.getLabel());
     }
 
     private static void unparsePrimitiveType(Tree node, StringBuilder sb) {
@@ -642,6 +644,7 @@ public final class Unparser {
     }
 
     private static void unparseQualifiedName(Tree node, StringBuilder sb) {
+        //? Name . SimpleName (Name = QUALIFIER_PROPERTY , SimpleName = NAME_PROPERTY
         sb.append(node.getLabel());
     }
 
@@ -694,7 +697,16 @@ public final class Unparser {
     }
 
     private static void unparseSuperFieldAccess(Tree node, StringBuilder sb) {
-
+        //[ClassName . ] super . Identifier
+        System.out.printf("\n*** Unparse SuperFieldAccess ***\n");
+        List <Tree> children = node.getChildren();
+        sb.append("\nsuper.");
+        for (Tree child : children) {
+            prettyPrintNode(child,sb);
+	}
+        //String className = node.getParent().getType().name;
+        //String identifier = node.getType().name;
+        //sb.append("super." + identifier);
     }
 
     private static void unparseSuperMethodInvocation(Tree node,
@@ -929,7 +941,11 @@ public final class Unparser {
     }
 
     private static void unparseDimension(Tree node, StringBuilder sb) {
-
+        List<Tree> children = node.getChildren();
+        for (Tree child: children) {
+            prettyPrintNode(child,sb);
+        }
+        sb.append("[]");
     }
 
     private static void unparseLambdaExpression(Tree node, StringBuilder sb) {
